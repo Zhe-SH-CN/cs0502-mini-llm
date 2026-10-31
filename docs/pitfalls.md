@@ -90,3 +90,14 @@
   pip 只能满足其一，告警但不中断。
 - **判定**：良性。本项目不使用 gradio/diffusers；transformers+hub 0.36.2 自洽。
 - **动作**：忽略并记录；不卸载/升级 Colab 基础包（避免破坏平台环境）。
+
+## P-16 peft 的 torchao 版本误检：覆写模块属性无效，必须卸载 torchao
+- **现象**：LoRA 初始化时 `ImportError: Found an incompatible version of torchao.
+  Found version 0.10.0, but only versions above 0.16.0 are supported`。
+- **根因**：`peft.import_utils.is_torchao_available()` 在环境存在 <0.16.0 的 torchao 时直接 raise
+  （不是返回 False）。Colab 基础镜像预装 torchao==0.10.0。
+  覆写 `peft.import_utils` / `peft.tuners.lora.model` 的属性只修住两个绑定；真正调用原函数的
+  是其它在 import 期按值持有该函数的 peft 模块（traceback 折叠帧），故补丁无效。
+- **正解**：移除触发源——`pip uninstall -y torchao` + `sys.modules.pop("torchao", None)`。
+  本项目不用 torchao（量化走 bitsandbytes）；卸载后 find_spec→None，函数对任何调用方返回 False；
+  脏内核/新内核均生效，无需重启。已注入 v4 notebook Cell 1 顶部（幂等）。
