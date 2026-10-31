@@ -83,3 +83,10 @@
 - **根因**：OAuth 授权时选择了错误的账号/范围，Colab 前端返回 error 回包。
 - **解法**：重启运行时清空本次运行时的 Drive 授权状态，重新 mount 并在弹窗中选择正确账号与「允许」；
   授权属安全决策，交由用户手动完成（Agent 不代点凭据/范围选择）。
+
+## P-15 pip 依赖解析告警：gradio/diffusers 与 huggingface-hub 0.36.2 冲突（良性）
+- **现象**：`gradio-client/diffusers/gradio requires huggingface-hub<3.0,>=1.16.0, but you have 0.36.2`。
+- **根因**：transformers 4.57.3 约束 hub<1.0，与 Colab 预装 gradio/diffusers 的 hub>=1.16 互斥；
+  pip 只能满足其一，告警但不中断。
+- **判定**：良性。本项目不使用 gradio/diffusers；transformers+hub 0.36.2 自洽。
+- **动作**：忽略并记录；不卸载/升级 Colab 基础包（避免破坏平台环境）。
