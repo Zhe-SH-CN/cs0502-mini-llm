@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "minillm"
+version = "0.1.0"
+description = "CS0502 Mini-LLM: small-model deployment & fine-tuning toolkit (SFT/LoRA/QLoRA/DPO + quant bench + 3-task eval)"
+requires-python = ">=3.10"
+dependencies = [
+    "torch>=2.1",
+    "transformers>=4.44,<5.0",
+    "datasets>=2.19",
+    "peft>=0.11",
+    "trl>=0.9,<0.16",
+    "accelerate>=0.30",
+    "bitsandbytes>=0.43",
+    "sentencepiece",
+    "tiktoken",
+    "numpy",
+    "pandas",
+]
+
+[project.optional-dependencies]
+quant = ["auto-gptq", "autoawq", "llama-cpp-python", "optimum"]
+dev = ["pytest"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

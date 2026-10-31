@@ -1,0 +1,37 @@
+# CS0502 Mini-LLM 流水线（免费 CPU 节点）：单测 + 数据管线 + CPU 冒烟评测
+# GPU 实验不在 CI 跑（GPU 额度为 0，见 docs/pitfalls.md P-01），GPU 走 Colab T4。
+main:
+  push:
+    - runner:
+        tags: cnb:arch:amd64
+        cpus: 4
+      stages:
+        - name: setup
+          script: |
+            python3 -m pip install -q --upgrade pip
+            python3 -m pip install -q pytest numpy pandas
+            python3 -m pip install -q -e .
+        - name: unit-tests
+          script: |
+            python3 -m pytest tests -q
+        - name: build-data
+          script: |
+            python3 scripts/build_data.py --out data --seed 42
+            ls -R data | head -40
+        - name: cpu-smoke-eval
+          timeout: 30m
+          script: |
+            python3 -m pip install -q "torch==2.3.1" --index-url https://download.pytorch.org/whl/cpu
+            python3 -m pip install -q "transformers==4.44.2" "sentencepiece" "tiktoken"
+            python3 scripts/run_eval.py --data data --results results \
+              --model minimind-26m --task courseqa --max-samples 6 --dtype float32 --attn eager
+  pull_request:
+    - runner:
+        tags: cnb:arch:amd64
+        cpus: 4
+      stages:
+        - name: unit-tests
+          script: |
+            python3 -m pip install -q pytest numpy pandas
+            python3 -m pip install -q -e .
+            python3 -m pytest tests -q
