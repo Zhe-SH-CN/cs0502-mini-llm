@@ -3,6 +3,7 @@
 版本策略：trl 0.9–0.15 均可（SFTTrainer / DPOTrainer 签名兼容子集）。
 T4 适配：fp16 + sdpa + gradient_checkpointing；QLoRA 用 NF4 双重量化。
 """
+import inspect
 import json
 from pathlib import Path
 from typing import Optional
@@ -10,9 +11,8 @@ from typing import Optional
 import torch
 from datasets import Dataset as HFDataset
 from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
-from transformers import (AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig,
-                          TrainingArguments)
-from trl import DPOTrainer, SFTTrainer
+from transformers import (AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig)
+from trl import DPOConfig, DPOTrainer, SFTConfig, SFTTrainer
 
 from .config import ExpConfig, MODELS
 from .data import Dataset, inject_label_noise, subsample, to_sft_messages
@@ -22,6 +22,13 @@ _TARGETS = {
     "qv": ["q_proj", "v_proj"],
     "qkvo": ["q_proj", "k_proj", "v_proj", "o_proj"],
 }
+
+
+def _cls_kw(trainer_cls, tok) -> dict:
+    """trl 0.13+ 用 processing_class，更早用 tokenizer；按签名探测，避免版本硬编码。"""
+    if "processing_class" in inspect.signature(trainer_cls.__init__).parameters:
+        return {"processing_class": tok}
+    return {"tokenizer": tok}
 
 
 def _load_base(cfg: ExpConfig):
@@ -80,7 +87,7 @@ def train_sft(ds: Dataset, task: str, cfg: ExpConfig, out_dir, tok=None, model=N
     hf = HFDataset.from_list(rows)
     hf = hf.map(lambda ex: _to_text(ex, tok), remove_columns=["messages"])
 
-    args = TrainingArguments(
+    args = SFTConfig(
         output_dir=str(out_dir / "ckpt"),
         num_train_epochs=cfg.epochs,
         per_device_train_batch_size=cfg.batch_size,
@@ -95,12 +102,13 @@ def train_sft(ds: Dataset, task: str, cfg: ExpConfig, out_dir, tok=None, model=N
         gradient_checkpointing=True,
         report_to=[],
         remove_unused_columns=False,
+        max_grad_norm=1.0,
     )
     trainer = SFTTrainer(
         model=model, args=args, train_dataset=hf,
         max_seq_length=cfg.max_seq_len,
-        tokenizer=tok,
         packing=False,
+        **_cls_kw(SFTTrainer, tok),
     )
     trainer.train()
     trainer.save_model(str(out_dir / "final"))
@@ -126,7 +134,7 @@ def train_dpo(ds: Dataset, task: str, cfg: ExpConfig, out_dir, tok=None, model=N
         })
     hf = HFDataset.from_list(pairs)
 
-    args = TrainingArguments(
+    args = DPOConfig(
         output_dir=str(out_dir / "ckpt"),
         num_train_epochs=cfg.epochs,
         per_device_train_batch_size=max(1, cfg.batch_size // 2),
@@ -135,10 +143,12 @@ def train_dpo(ds: Dataset, task: str, cfg: ExpConfig, out_dir, tok=None, model=N
         fp16=True, bf16=False,
         logging_steps=10, save_strategy="epoch", seed=cfg.seed,
         gradient_checkpointing=True, report_to=[], remove_unused_columns=False,
+        beta=0.1,
+        max_length=cfg.max_seq_len,
+        max_prompt_length=cfg.max_seq_len // 2,
     )
     trainer = DPOTrainer(model=model, args=args, train_dataset=hf,
-                         beta=0.1, max_length=cfg.max_seq_len,
-                         max_prompt_length=cfg.max_seq_len // 2, tokenizer=tok)
+                         **_cls_kw(DPOTrainer, tok))
     trainer.train()
     trainer.save_model(str(out_dir / "final"))
     tok.save_pretrained(str(out_dir / "final"))

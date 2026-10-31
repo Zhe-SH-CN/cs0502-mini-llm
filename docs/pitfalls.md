@@ -53,3 +53,14 @@
 - **现象**：setup 阶段 `sh: line 1: python3: command not found`，返回码 127。
 - **根因**：未声明 `docker.image` 时默认镜像不含 Python。
 - **解法**：`.cnb.yml` 显式 `docker: image: python:3.11-slim`。
+
+## P-11 Colab 预装 torch 已升级到 2.11+cu130，钉旧版 torch 直接安装失败
+- **现象**：`ERROR: Could not find a version that satisfies the requirement torch==2.3.1
+  (from versions: 2.5.0, 2.5.1, ... 2.15.0)`；环境自检打印 `torch 2.11.0+cu130 | cuda 13.0`。
+- **根因**：Colab 运行时基镜像的 torch 随平台升级；默认 PyPI 源对当前 CUDA 组合不再提供 2.3.1 wheel。
+- **连带影响**：run-all 在首个错误处 halt，导致后续 Drive 挂载 cell 未执行 → 本轮无落盘（印证 P-05 的必要性）。
+- **解法**：notebook 不再钉 torch，直接用预装版本；只钉 `transformers==4.57.3 + trl==0.15.0`
+  （已验证兼容矩阵）。train.py 改用 `SFTConfig/DPOConfig` + 签名探测 `processing_class/tokenizer`，
+  兼容 trl 0.9–0.15。
+- **证据**：notebook 00 cell[0] 成功输出 `GPU: Tesla T4 | VRAM: 14.6 GB | CC: (7, 5)`；
+  cell[1] 输出上述 ERROR 与 `torch 2.11.0+cu130`。

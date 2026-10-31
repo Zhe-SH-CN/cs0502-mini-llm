@@ -12,13 +12,14 @@ OUT.mkdir(exist_ok=True)
 
 REPO_URL = "https://github.com/Zhe-SH-CN/cs0502-mini-llm.git"
 
-PIP_CELL = """# [1] 安装依赖（T4 / CUDA12 兼容钉死版本）
-# 关键：transformers 必须 <5（trl 0.x 与 5.x 不兼容）；不装 flash-attn（T4 sm7.5 不支持）
-!pip install -q "torch==2.3.1" "transformers==4.44.2" "datasets==2.20.0" "peft==0.12.0" \\
-    "trl==0.9.6" "accelerate==0.33.0" "bitsandbytes==0.43.3" "sentencepiece" "tiktoken" \\
-    "numpy<2" "pandas" "matplotlib"
-import torch
+PIP_CELL = """# [1] 依赖对齐
+# 关键：不钉 torch（用 Colab 预装 torch，钉旧版会因下架而失败，见 pitfalls P-11）
+# 钉死 transformers/trl 兼容矩阵（trl 0.x 与 transformers 5.x 不兼容，见 P-04）
+!pip install -q "transformers==4.57.3" "trl==0.15.0" "peft" "accelerate" "bitsandbytes" \\
+    "datasets" "sentencepiece" "tiktoken" "pandas" "matplotlib"
+import torch, transformers, trl
 print("torch", torch.__version__, "| cuda", torch.version.cuda)
+print("transformers", transformers.__version__, "| trl", trl.__version__)
 """
 
 GPU_CELL = """# [0] GPU 自检：确认拿到 T4，并钉死 T4 兼容参数
