@@ -5,6 +5,8 @@ main:
     - runner:
         tags: cnb:arch:amd64
         cpus: 4
+      docker:
+        image: python:3.11-slim
       stages:
         - name: setup
           script: |
@@ -29,6 +31,8 @@ main:
     - runner:
         tags: cnb:arch:amd64
         cpus: 4
+      docker:
+        image: python:3.11-slim
       stages:
         - name: unit-tests
           script: |

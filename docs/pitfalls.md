@@ -48,3 +48,8 @@
 ## P-09 本机（M2 / 8GB）无法承担 GPU 实验
 - **现象**：无 CUDA；bitsandbytes CUDA 量化不可用；8GB 内存跑 1.5B 吃力。
 - **解法**：按用户决定，全部 GPU 实验在 Colab T4 执行；本机仅做纯 Python 单测与文件生成。
+
+## P-10 CNB CI 默认构建镜像无 python3
+- **现象**：setup 阶段 `sh: line 1: python3: command not found`，返回码 127。
+- **根因**：未声明 `docker.image` 时默认镜像不含 Python。
+- **解法**：`.cnb.yml` 显式 `docker: image: python:3.11-slim`。
