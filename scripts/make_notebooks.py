@@ -37,6 +37,7 @@ CLONE_CELL = f"""# [2] 克隆仓库并把 src 加入 sys.path（单一事实源�
 # 注意：Colab 上 `pip install -e .`(PEP660 editable) 常出现装完仍 import 不到的坑，
 # 故不用 editable，直接 sys.path 注入 src（依赖已在 [1] 装好）。
 import os, subprocess, sys
+os.chdir("/content")   # 归位：避免内核 CWD 被历史运行带偏导致嵌套克隆
 if not os.path.exists("cs0502-mini-llm"):
     subprocess.run(["git", "clone", "--depth", "1", "{REPO_URL}"], check=True)
 _src = os.path.abspath("cs0502-mini-llm/src")

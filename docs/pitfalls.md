@@ -71,3 +71,15 @@
 - **根因**：Colab 内核与 editable 安装的 path hook 在该环境下未生效（构建隔离 + 内核 path 缓存）。
 - **解法**：notebook 不做 editable 安装，改为 `sys.path.insert(0, <repo>/src)` 直接注入；
   第三方依赖仍由 pip 安装。简单、确定、无副作用。
+
+## P-13 内核 CWD 漂移导致仓库嵌套克隆（4 层）
+- **现象**：cell 输出 `src: /content/cs0502-mini-llm/cs0502-mini-llm/cs0502-mini-llm/cs0502-mini-llm/src`。
+- **根因**：旧版 cell 有 `os.chdir("cs0502-mini-llm")`；Colab 运行时跨 reload 复用同一内核，
+  CWD 已深入仓库内部，后续 `os.path.exists("cs0502-mini-llm")` 为 False → 在仓库内再克隆，逐层嵌套。
+- **解法**：克隆 cell 开头 `os.chdir("/content")` 强制归位，再判断/克隆/注入 sys.path。
+
+## P-14 drive.mount 授权范围选错 → MessageError
+- **现象**：`drive.mount("/content/drive")` 抛 `MessageError`（google.colab/_message.py read_reply_from_input）。
+- **根因**：OAuth 授权时选择了错误的账号/范围，Colab 前端返回 error 回包。
+- **解法**：重启运行时清空本次运行时的 Drive 授权状态，重新 mount 并在弹窗中选择正确账号与「允许」；
+  授权属安全决策，交由用户手动完成（Agent 不代点凭据/范围选择）。
