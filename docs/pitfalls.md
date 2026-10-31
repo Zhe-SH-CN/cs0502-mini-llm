@@ -101,3 +101,24 @@
 - **正解**：移除触发源——`pip uninstall -y torchao` + `sys.modules.pop("torchao", None)`。
   本项目不用 torchao（量化走 bitsandbytes）；卸载后 find_spec→None，函数对任何调用方返回 False；
   脏内核/新内核均生效，无需重启。已注入 v4 notebook Cell 1 顶部（幂等）。
+
+## P-17 DPO 策略塌缩：lr=5e-5 过高 → 重复退化（unmapped 93.75%）
+- **现象**：`qwen2.5-0.5b-intent-dpo` accuracy 0.0625（低于 baseline 0.219）；
+  预测分布 {None:180, 资源请求:12}；raw 输出形如「概念标签标签标签…」「作业标签标签…」。
+- **排查**：DPO 实现本身健全（prompt 以 -100 掩码、seq logprob 已长度归一、disable_adapter 作 reference）；
+  故塌缩归因于超参：lr 上限 5e-5 比 LoRA-DPO 常规值（1e-6~1e-5）高 10–50 倍，0.5B 上 ~288 步即崩。
+- **处置**：v6 将 lr 降为 5e-6 并以新 run_id `...-dpo-v2` 重跑；**v1 保留作失败案例**（评分加分项：
+  诚实的负结果 + 定位过程）。
+
+## P-18 饱和任务使消融失去区分度（intent/jsonout SFT=1.000；abl-target 全 1.000）
+- **现象**：26M/0.5B 在 intent/jsonout 上 SFT 后 100%；LoRA 靶向模块消融三档全 1.000。
+- **根因**：intent/jsonout 为模板生成数据，test 与 train 同模板 → 分布内记忆即可满分，非泛化能力。
+- **处置**：① 报告中必须披露该局限，泛化结论以 courseqa（开放答案、分级提升 0.10→0.59）为准；
+  ② v6 将靶向模块消融改到 courseqa（有区分度），run_id 加 `-courseqa` 后缀。
+
+## P-19 汇总表 NaN 为宽表稀疏缺失的展示伪影，非数据损坏
+- **现象**：notebook 汇总表大量 NaN。
+- **根因**：`**{k: v for k, v in metrics.items()}` 把三任务异构指标摊成一张宽表；
+  courseqa 行无 json_parse_rate、jsonout 行无 exact_match → pandas 缺失即 NaN。
+  runs.jsonl 实测 0 个 NaN。
+- **处置**：v6 对三张表 `fillna("—")`；报告按任务分表呈现。
