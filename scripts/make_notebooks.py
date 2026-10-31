@@ -33,12 +33,15 @@ DTYPE, ATTN = "float16", "sdpa"
 print("钉死参数: dtype=%s attn=%s (T4 无 bf16/FA2)" % (DTYPE, ATTN))
 """
 
-CLONE_CELL = f"""# [2] 克隆仓库并安装 minillm 包（单一事实源）
-import os, subprocess
+CLONE_CELL = f"""# [2] 克隆仓库并把 src 加入 sys.path（单一事实源）
+# 注意：Colab 上 `pip install -e .`(PEP660 editable) 常出现装完仍 import 不到的坑，
+# 故不用 editable，直接 sys.path 注入 src（依赖已在 [1] 装好）。
+import os, subprocess, sys
 if not os.path.exists("cs0502-mini-llm"):
     subprocess.run(["git", "clone", "--depth", "1", "{REPO_URL}"], check=True)
-os.chdir("cs0502-mini-llm")
-!pip install -q -e .
+_src = os.path.abspath("cs0502-mini-llm/src")
+if _src not in sys.path:
+    sys.path.insert(0, _src)
 import minillm
 from minillm.config import ExpConfig
 from minillm import data as D
@@ -47,7 +50,7 @@ from minillm import train as T
 from minillm import quantize as Q
 from minillm import bench as B
 from minillm.record import Recorder
-print("minillm", minillm.__version__, "| cwd", os.getcwd())
+print("minillm", minillm.__version__, "| src:", _src)
 """
 
 DRIVE_CELL = """# [3] 挂载 Google Drive，统一结果/数据落盘路径（Colab 文件系统易失，必须落 Drive）

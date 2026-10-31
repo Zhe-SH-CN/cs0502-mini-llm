@@ -64,3 +64,10 @@
   兼容 trl 0.9–0.15。
 - **证据**：notebook 00 cell[0] 成功输出 `GPU: Tesla T4 | VRAM: 14.6 GB | CC: (7, 5)`；
   cell[1] 输出上述 ERROR 与 `torch 2.11.0+cu130`。
+
+## P-12 Colab 上 `pip install -e .`(PEP660 editable) 装完仍 import 不到
+- **现象**：`Building editable for minillm (pyproject.toml) ... done` 之后
+  `ModuleNotFoundError: No module named 'minillm'`。
+- **根因**：Colab 内核与 editable 安装的 path hook 在该环境下未生效（构建隔离 + 内核 path 缓存）。
+- **解法**：notebook 不做 editable 安装，改为 `sys.path.insert(0, <repo>/src)` 直接注入；
+  第三方依赖仍由 pip 安装。简单、确定、无副作用。
