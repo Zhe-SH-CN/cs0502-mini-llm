@@ -5,10 +5,10 @@
 
 | 编号 | 内容 | 在哪里截 | 用途章节 |
 |---|---|---|---|
-| S-01 | CNB 仓库主页（cs0502-mini-llm） | cnb.cool/sizhezhang/cs0502-mini-llm | 项目结果展示 |
-| S-02 | CNB CI 构建列表（含成功/失败） | 仓库→构建 | 过程证据 |
-| S-03 | CNB CI 某次构建日志（数据管线跑批） | 构建详情→日志 | 过程证据/AI使用 |
-| S-04 | CNB CI 单元测试通过输出 | 构建日志 pytest 段 | 问题与解决 |
+| S-01 | GitHub 仓库主页（cs0502-mini-llm） | github.com/Zhe-SH-CN/cs0502-mini-llm | 项目结果展示 |
+| S-02 | GitHub 提交历史（含 fix 提交） | 仓库→Commits | 过程证据 |
+| S-03 | Colab 文件侧栏克隆仓库成功 | notebook 00 cell[2] 输出 | 过程证据 |
+| S-04 | 单测/数据构建输出（notebook 00） | notebook 00 cell[4] | 问题与解决 |
 | S-05 | Colab 运行时类型对话框（T4 选中） | 运行时→更改运行时类型 | 资源优化 |
 | S-06 | Colab GPU 自检输出（T4/16GB/CC7.5） | notebook 00 cell[0] | 资源优化 |
 | S-07 | notebook 00 数据集统计输出 | notebook 00 cell[4] | 数据与训练实验 |

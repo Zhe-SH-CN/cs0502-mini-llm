@@ -10,7 +10,7 @@ ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "notebooks"
 OUT.mkdir(exist_ok=True)
 
-REPO_URL = "https://cnb.cool/sizhezhang/cs0502-mini-llm.git"
+REPO_URL = "https://github.com/Zhe-SH-CN/cs0502-mini-llm.git"
 
 PIP_CELL = """# [1] 安装依赖（T4 / CUDA12 兼容钉死版本）
 # 关键：transformers 必须 <5（trl 0.x 与 5.x 不兼容）；不装 flash-attn（T4 sm7.5 不支持）

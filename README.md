@@ -4,9 +4,8 @@
 部署并微调小型语言模型（MiniMind → Qwen2.5），在三个自选任务上量化微调前后效果，
 并做量化部署基准与数据/训练消融。
 
-- 仓库：https://cnb.cool/sizhezhang/cs0502-mini-llm
-- 算力：Google Colab **T4 (16GB, sm7.5)**（CNB GPU 额度为 0，见 `docs/pitfalls.md` P-01）
-- 代码托管 + 免费 CPU CI：CNB
+- 仓库：https://github.com/Zhe-SH-CN/cs0502-mini-llm
+- 算力：Google Colab **T4 (16GB, sm7.5)**（CNB GPU 额度为 0，见 `docs/pitfalls.md` P-01，故弃用 CNB）
 
 ## 三个自选任务
 | 任务 | 说明 | 指标 |
@@ -35,7 +34,7 @@ data/, results/     由脚本生成（gitignore）
 
 notebook 自包含：安装钉死版本依赖 → 克隆本仓库 → `pip install -e .` → 挂 Drive。
 
-## 运行（CI / 本地，CPU）
+## 运行（本地，CPU，仅验证管线）
 ```bash
 pip install -e .[dev]
 pytest tests -q

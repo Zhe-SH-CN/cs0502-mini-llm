@@ -9,7 +9,7 @@
   L40 节点 CPU 固定 16 核 → 固定 ¥8/小时，无法调低核数省钱。8 月同配置曾成功，说明是额度耗尽而非配置错误。
 - **证据**：`cnb charge get-quota --slug sizhezhang` 返回 `ci_gpu_in_sec.total=0`、`dev_gpu_in_sec.total=0`；
   官方定价文档明确 GPU 免费额度 0。
-- **解法**：放弃 CNB GPU，改走 Google Colab T4（免费）。CNB 仅作为代码托管 + 免费 CPU CI。
+- **解法**：放弃 CNB GPU，改走 Google Colab T4（免费）；代码托管同步迁到 GitHub（Colab 克隆更稳）。
 
 ## P-02 「天才程序节」特权不含 GPU 且当天到期
 - **现象**：特权额度里 `compute_build_gpu_corehour=null`、`compute_develop_gpu_corehour=null`。
@@ -49,7 +49,7 @@
 - **现象**：无 CUDA；bitsandbytes CUDA 量化不可用；8GB 内存跑 1.5B 吃力。
 - **解法**：按用户决定，全部 GPU 实验在 Colab T4 执行；本机仅做纯 Python 单测与文件生成。
 
-## P-10 CNB CI 默认构建镜像无 python3
+## P-10 CNB CI 默认构建镜像无 python3（已随 CNB 弃用而作废，留作过程记录）
 - **现象**：setup 阶段 `sh: line 1: python3: command not found`，返回码 127。
 - **根因**：未声明 `docker.image` 时默认镜像不含 Python。
 - **解法**：`.cnb.yml` 显式 `docker: image: python:3.11-slim`。
